@@ -33,7 +33,6 @@ export function getRecommend() {
       sin:0,
       ein:29
     })
-    console.log(data)
     return axios.get(url,{
       params:data
     }).then((res)=>{
