@@ -21,6 +21,9 @@
         </li>
       </ul>
     </div>
+    <div class="list-fixed" v-show="fixedTitle">
+      <h1 class="fixed-title">{{fixedTitle}}</h1>
+    </div>
   </scroll>
 </template> 
 <script type="text/ecmascript-6">
@@ -53,6 +56,12 @@ const ANCHOR_HEIGHT = 18
       return this.data.map((group)=>{
         return group.title.substr(0,1)
       })
+    },
+    fixedTitle(){
+      if(this.scrollY >  0){
+        return
+      }
+      return this.data[this.currentIndex] ? this.data[this.currentIndex].title : '' 
     }
   },
   methods:{
@@ -71,11 +80,19 @@ const ANCHOR_HEIGHT = 18
         this.touch.y2 = firstTouch.pageY
         let daleta =  (this.touch.y2 - this.touch.y1)/ANCHOR_HEIGHT | 0
         let  anchorIndex = parseInt(this.touch.anchorIndex + daleta)
-        
-      this._scrollTo(anchorIndex)
+        this._scrollTo(anchorIndex)
     },
     _scrollTo(index){
-       this.$refs.listview.scrollToElement(this.$refs.listGroup[index],0)
+       if(!index && index !== 0){
+         return
+       }
+       if(index <0 ){
+         index=0
+       }else if(index > this.listHeight[index]-2){
+          index = this.listHeight[index]-2
+       }
+       this.scrollY = -this.listHeight[index]
+       this.$refs.listview.scrollToElement(this.$refs.listGroup[index],5000)
     },
     scroll(pos){
         this.scrollY=pos.y
@@ -100,16 +117,23 @@ const ANCHOR_HEIGHT = 18
     },
     scrollY(newY){
       const listHeight = this.listHeight;
-      for(let i=0;i<listHeight.length;i++){
+      //当滚动到顶部，newy>0
+      if(newY>0){
+        this.currentIndex = 0
+        return
+      }
+      //中间部分滚动
+      for(let i=0;i<listHeight.length -1;i++){
         let height1 = listHeight[i] //下线
         let height2 = listHeight[i+1] //上线
-        if(!height2 || (-newY>height1 && -newY <height2)){
+        if(-newY>=height1 && -newY <height2){
              this.currentIndex = i
              console.log(this.currentIndex)
              return
         } 
       }
-      this.currentIndex = 0
+      //当滚动到底部，且-newY大于最后一个元素的上限
+      this.currentIndex = listHeight.length - 2
     }
   },
   components:{
