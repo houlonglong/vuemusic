@@ -7,7 +7,7 @@ fastclick.attach(document.body)
 import router from './router'
 import 'common/stylus/index.styl'
 Vue.config.productionTip = false
-console.log(VueLazyload)
+import store from './store'
 Vue.use(VueLazyload, {
   preLoad: 1.3,
   error: 'dist/error.png',
@@ -18,5 +18,6 @@ Vue.use(VueLazyload, {
 new Vue({
   el: '#app',
   router,
+  store,
   render: h => h(App)
 })
