@@ -10,7 +10,8 @@
             <div class="filter">
             </div>
         </div>
-        <scroll :data="songs" class="list" ref="list">
+        <div class="bg-layer" ref="layer"></div>
+        <scroll @scroll="scroll" :props-type="propsType"  :listen-scroll="listenScroll" :data="songs" class="list" ref="list">
             <div class="song-list-wrapper">
                 <song-list :songs="songs"></song-list> 
             </div>
@@ -21,7 +22,7 @@
 <script type="text/ecmascript-6">
 import Scroll from 'base/scroll/scroll'
 import SongList from 'base/song-list/song-list'
-
+const reservedHeiht = 40
 export default {
     props :{
         bgImage: {
@@ -37,6 +38,42 @@ export default {
             default:'' 
         }
     },
+    created(){
+        this.propsType = 3
+        this.listenScroll= true
+    },
+     mounted(){
+        this.imgageHeight = this.$refs.bgImage.clientHeight
+        this.minTranslateY =  -this.imgageHeight + reservedHeiht
+        this.$refs.list.$el.style.top = `${this.imgageHeight}px`
+    },
+    data(){
+        return {
+            scrollY : 0    
+        }
+    },
+    methods:{
+        scroll(pos){
+            this.scrollY = pos.y
+        }
+    },
+    watch:{
+        scrollY(newY){
+            let translateY =  Math.max(this.minTranslateY,newY)
+            let Zindx = 0    
+            this.$refs.layer.style['transform'] = `translate3d(0,${translateY}px,0)`
+            this.$refs.layer.style['webkitTransform'] = `translate3d(0,${translateY}px,0)`
+            if(newY < this.minTranslateY){
+                Zindx = 10
+                this.$refs.bgImage.style.paddingTop = 0
+                this.$refs.bgImage.style.height = `${reservedHeiht}px`
+            }else{
+                 this.$refs.bgImage.style.paddingTop = '70%'
+                this.$refs.bgImage.style.height = 0
+            }
+            this.$refs.bgImage.style.zIndex = Zindx
+        }
+    },
     components:{
         Scroll,
         SongList
@@ -46,9 +83,7 @@ export default {
              return `background-image:url(${this.bgImage})`
         }
     },
-    mounted(){
-        this.$refs.list.$el.style.top = `${this.$refs.bgImage.clientHeight}px`
-    }
+   
 }
 </script>
 
@@ -133,7 +168,7 @@ export default {
       bottom: 0
       width: 100%
       background: $color-background
-      overflow: hidden
+     
       .song-list-wrapper
         padding: 20px 30px
       .loading-container
