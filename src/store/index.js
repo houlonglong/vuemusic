@@ -7,7 +7,7 @@ import * as getters from './getters'
 import state from './state'
 import mutations from './mutations'
 import createLogger from 'vuex/dist/logger'
-
+console.log(state,11111111111)
 Vue.use(Vuex)
 
 const debug = process.env.NOOE_ENV !== 'production'

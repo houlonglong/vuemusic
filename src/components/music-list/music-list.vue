@@ -1,28 +1,44 @@
 <template>
     <div class="music-list">
-        <div class="back">
+        <div class="back" @touchend="back">
             <i class="icon-back">
 
             </i>
         </div>
         <h1 class="title" v-html="title"></h1>
         <div class="bg-image" :style="bgStyle" ref="bgImage">
-            <div class="filter">
+            <div class="play-wrapper">
+                <div class="play" v-show="songs.length>0" ref="palyBtn">
+                    <i class="icon-play">
+                        <span class="text">随机播放全部</span>                                                 
+                    </i>
+                </div>
+            </div>
+            <div class="filter" ref="filter">
             </div>
         </div>
         <div class="bg-layer" ref="layer"></div>
         <scroll @scroll="scroll" :props-type="propsType"  :listen-scroll="listenScroll" :data="songs" class="list" ref="list">
             <div class="song-list-wrapper">
-                <song-list :songs="songs"></song-list> 
+                <song-list @select="selectItem" :songs="songs"></song-list> 
             </div>
+            <div class="loading-container" v-show="!songs.length">
+                    <loading></loading>
+            </div>
+    
         </scroll>
     </div>    
 </template>
 
 <script type="text/ecmascript-6">
 import Scroll from 'base/scroll/scroll'
+import Loading from 'base/laoding/loading'
 import SongList from 'base/song-list/song-list'
-const reservedHeiht = 40
+import { prefixStyle } from 'common/js/dom'
+import { mapActions } from 'vuex'
+const RESERVED_HEIGHT = 40
+const transform = prefixStyle('transform')
+const filter = prefixStyle('filter')
 export default {
     props :{
         bgImage: {
@@ -43,9 +59,9 @@ export default {
         this.listenScroll= true
     },
      mounted(){
-        this.imgageHeight = this.$refs.bgImage.clientHeight
-        this.minTranslateY =  -this.imgageHeight + reservedHeiht
-        this.$refs.list.$el.style.top = `${this.imgageHeight}px`
+        this.imageHeight = this.$refs.bgImage.clientHeight
+        this.minTranslateY =  -this.imageHeight + RESERVED_HEIGHT
+        this.$refs.list.$el.style.top = `${this.imageHeight}px`
     },
     data(){
         return {
@@ -55,28 +71,59 @@ export default {
     methods:{
         scroll(pos){
             this.scrollY = pos.y
-        }
+        },
+        back(){
+           this.$router.back()
+        },
+        selectItem(item,index){
+            console.log(this.songs,index)
+              this.selectPlay({
+                  list:this.songs,
+                  index:index
+              })
+        },
+        ...mapActions([
+            'selectPlay'
+        ])
+
     },
     watch:{
         scrollY(newY){
             let translateY =  Math.max(this.minTranslateY,newY)
-            let Zindx = 0    
-            this.$refs.layer.style['transform'] = `translate3d(0,${translateY}px,0)`
-            this.$refs.layer.style['webkitTransform'] = `translate3d(0,${translateY}px,0)`
-            if(newY < this.minTranslateY){
-                Zindx = 10
-                this.$refs.bgImage.style.paddingTop = 0
-                this.$refs.bgImage.style.height = `${reservedHeiht}px`
+            let ZIndx = 0    
+            let scale  = 1
+            let blur = 0
+            this.$refs.layer.style[transform] = `translate3d(0,${translateY}px,0)`
+            const percent = Math.abs(newY/this.imageHeight)
+            if(newY > 0){
+                scale = 1 +  percent
+                ZIndx = 10
             }else{
-                 this.$refs.bgImage.style.paddingTop = '70%'
-                this.$refs.bgImage.style.height = 0
+               blur = Math.min(20 * percent,20) 
             }
-            this.$refs.bgImage.style.zIndex = Zindx
+            this.$refs.bgImage.style[filter] = `blur(${blur}px)`
+           // this.$refs.bgImage.style['webkitBackdrop-filter'] = `blur(${blur}px)`
+            if(newY < this.minTranslateY){
+                ZIndx = 10
+                this.$refs.bgImage.style[filter] = `blur(0px)`
+                this.$refs.bgImage.style.paddingTop = 0
+                this.$refs.bgImage.style.height = `${RESERVED_HEIGHT}px`
+                this.$refs.palyBtn.style.display = 'none'
+             
+            }else{
+                this.$refs.bgImage.style.paddingTop = '70%'
+                this.$refs.bgImage.style.height = 0
+                this.$refs.palyBtn.style.display = 'block'
+            }
+       
+            this.$refs.bgImage.style.zIndex = ZIndx
+            this.$refs.bgImage.style[transform] = `scale(${scale})`
         }
     },
     components:{
         Scroll,
-        SongList
+        SongList,
+        Loading
     },
     computed:{
         bgStyle(){
@@ -146,7 +193,7 @@ export default {
             display: inline-block
             vertical-align: middle
             margin-right: 6px
-            font-size: $font-size-medium-x
+            //font-size: $font-size-medium-x
           .text
             display: inline-block
             vertical-align: middle
