@@ -21,7 +21,7 @@ const mutations = {
         state.mode= mode
     },
     [types.SET_CURRENT_INDEX](state,index){
-        state.index= index
+        state.currentIndex= index
     },
 }
 
